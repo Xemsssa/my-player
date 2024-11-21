@@ -27,6 +27,7 @@ const HomeScreen = () => {
   const [userProfile, setUserProfile] = useState();
   const [recentlyPlayed, setrecentlyPlayed] = useState([]);
   const [topArtist, settopArtist] = useState([]);
+  // const navigation = useNavigation();
 
   const getProfile = async () => {
     const accessToken = await AsyncStorage.getItem("token");
@@ -114,7 +115,11 @@ const HomeScreen = () => {
           <Header />
           <Types />
           <View style={styles.container}>
-            <Favorite />
+            <Favorite
+              onPress={() => {
+                navigation.navigate("Liked");
+              }}
+            />
             <MusicStyle />
           </View>
           {/* <RecentlyPlayed
