@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useContext } from "react";
+import React, { useContext, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
@@ -20,6 +20,7 @@ import LikedSong from "../components/LikedSong";
 import OrderIcon from "../components/OrderIcon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SongItem from "../components/SongItem";
+import useRef from 'react';
 
 const LikedSongScreen = () => {
   // const navigation = useNavigation();
@@ -35,6 +36,9 @@ const LikedSongScreen = () => {
   const [progress, setProgress] = useState(null);
   const [currentTime, setcurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
+
+  const [playing, setPlaying] = useState(false);
+  const value = useRef(0);
 
   const getSavedTracks = async () => {
     const accessToken = await AsyncStorage.getItem("token");
@@ -84,19 +88,54 @@ const LikedSongScreen = () => {
         { shouldPlay: true, isLooping: false },
         onPlaybackStatusUpdate
       );
+      onPlaybackStatusUpdate(status);
       setCurrentSong(sound);
       onPlaybackStatusUpdate(status);
       await sound.playAsync();
     } catch (error) {}
   };
+
   const onPlaybackStatusUpdate = async () => {
     if (status.isLoaded && status.iPlaying) {
       const progress = status.positionMillis / status.durationMillis;
       setProgress(progress);
-      setcurrentTime(progress.positionMillis);
+      setcurrentTime(status.positionMillis);
       setTotalDuration(status.durationMillis);
     }
   };
+  const circleSize = 12;
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60000);
+    const seconds = Math.floor(time / 60000) / 1000;
+    // return `${minutes:${seconds < 10 ? '0': ""}${seconds}`;
+  };
+
+  const handlePlayPause = async () => {
+    if (currentSong) {
+      if (isPlaying) {
+        await currentSong.pauseSync();
+      } else {
+        await currentSong.playAsync();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const playNextTrack = () => {
+   if (currentSong) {
+await currentSong.stopAsync();
+setCurrentSong(null);
+   }
+   value.current +=1;
+   if (value.current < savedtracks.length) {
+      const nextTrack = savedtracks[value.current];
+      setCurrentTrack(nextTrack);
+      await play(nextTrack);s
+   } else {
+    console.log('end of playlist')
+   }
+  } 
+};
 
   return (
     <>
@@ -104,7 +143,7 @@ const LikedSongScreen = () => {
         {/* <SafeAreaView> */}
         <ScrollView style={{ marginTop: 40 }}>
           <BackButton />
-          <SearchBlock />
+           <SearchBlock />
           <View style={{ height: 40 }} />
           <LikedSong />
           <OrderIcon />
@@ -126,6 +165,8 @@ const LikedSongScreen = () => {
           <SmallPlayer
             currentTrack={currentTrack}
             modalVisible={modalVisible}
+            handlePlayPause={handlePlayPause}
+            isPlaying={isPlaying}
           />
         </Pressable>
       )}
